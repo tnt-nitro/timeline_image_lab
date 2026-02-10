@@ -12,9 +12,8 @@ import re
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMAS = ROOT / "schemas"
 
-def check_artifacts(run_id):
+def check_artifacts(RUN_DIR):
     """Prüft, ob alle erwarteten Artefakte vorhanden sind"""
-    run_dir = ROOT / "runs" / run_id
     errors = []
     warnings = []
     
@@ -31,7 +30,7 @@ def check_artifacts(run_id):
     }
     
     for rel_path, desc in expected.items():
-        full_path = run_dir / rel_path
+        full_path = RUN_DIR / rel_path
         if full_path.exists():
             print(f"✅ {desc}: {rel_path}")
         else:
@@ -86,9 +85,9 @@ def check_no_sensitive_data(file_path):
     except:
         return True, None  # Binärdateien ignorieren
 
-def check_relative_paths(run_id):
+def check_relative_paths(RUN_DIR):
     """Prüft, ob alle Pfade in merged.json relativ sind"""
-    merged_path = ROOT / "runs" / run_id / "merged" / "merged_v001.json"
+    merged_path = RUN_DIR / "merged" / "merged_v001.json"
     if not merged_path.exists():
         return True, None  # Optional
     
@@ -110,15 +109,14 @@ def check_relative_paths(run_id):
     except Exception as e:
         return False, f"Fehler beim Laden: {e}"
 
-def check_versioning(run_id):
+def check_versioning(RUN_DIR):
     """Prüft Versionierung (monoton steigend)"""
-    run_dir = ROOT / "runs" / run_id
     errors = []
     
     # Prüfe Annotation-Versionen
-    annotate_files = sorted(run_dir.glob("annotations/annotate_v*.png"))
-    feedback_files = sorted(run_dir.glob("annotations/feedback_v*.json"))
-    merged_files = sorted(run_dir.glob("merged/merged_v*.json"))
+    annotate_files = sorted(RUN_DIR.glob("annotations/annotate_v*.png"))
+    feedback_files = sorted(RUN_DIR.glob("annotations/feedback_v*.json"))
+    merged_files = sorted(RUN_DIR.glob("merged/merged_v*.json"))
     
     # Extrahiere Versionen
     def extract_version(filename):
@@ -149,17 +147,17 @@ def main():
         sys.exit(1)
     
     run_id = sys.argv[1]
-    run_dir = ROOT / "runs" / run_id
+    RUN_DIR = ROOT / "runs" / run_id
     
-    if not run_dir.exists():
-        print(f"❌ Run-Verzeichnis nicht gefunden: {run_dir}")
+    if not RUN_DIR.exists():
+        print(f"❌ Run-Verzeichnis nicht gefunden: {RUN_DIR}")
         sys.exit(1)
     
     print(f"Verifiziere Dry-Run für: {run_id}\n")
     
     # 1. Artefakte prüfen
     print("1. Prüfe Artefakte...")
-    errors, warnings = check_artifacts(run_id)
+    errors, warnings = check_artifacts(RUN_DIR)
     for err in errors:
         print(f"  {err}")
     for warn in warnings:
@@ -168,7 +166,7 @@ def main():
     
     # 2. JSON-Schemas prüfen
     print("2. Prüfe JSON-Schemas...")
-    metadata_path = run_dir / "metadata/metadata.user.json"
+    metadata_path = RUN_DIR / "metadata/metadata.user.json"
     if metadata_path.exists():
         valid, msg = check_json_schema(metadata_path, SCHEMAS / "metadata.user.schema.json")
         if valid:
@@ -177,7 +175,7 @@ def main():
             print(f"  ❌ metadata.user.json: {msg}")
             errors.append(msg)
     
-    feedback_path = run_dir / "annotations/feedback_v001.json"
+    feedback_path = RUN_DIR / "annotations/feedback_v001.json"
     if feedback_path.exists():
         valid, msg = check_json_schema(feedback_path, SCHEMAS / "feedback.schema.json")
         if valid:
@@ -189,18 +187,18 @@ def main():
     
     # 3. Sensible Daten prüfen
     print("3. Prüfe auf sensible Daten...")
-    for file_path in run_dir.rglob("*.json"):
+    for file_path in RUN_DIR.rglob("*.json"):
         valid, msg = check_no_sensitive_data(file_path)
         if not valid:
-            print(f"  ❌ {file_path.relative_to(run_dir)}: {msg}")
+            print(f"  ❌ {file_path.relative_to(RUN_DIR)}: {msg}")
             errors.append(msg)
         else:
-            print(f"  ✅ {file_path.relative_to(run_dir)}: Keine sensiblen Daten")
+            print(f"  ✅ {file_path.relative_to(RUN_DIR)}: Keine sensiblen Daten")
     print()
     
     # 4. Relative Pfade prüfen
     print("4. Prüfe relative Pfade...")
-    valid, msg = check_relative_paths(run_id)
+    valid, msg = check_relative_paths(RUN_DIR)
     if valid:
         print(f"  ✅ Alle Pfade sind relativ")
     else:
@@ -210,7 +208,7 @@ def main():
     
     # 5. Versionierung prüfen
     print("5. Prüfe Versionierung...")
-    version_errors = check_versioning(run_id)
+    version_errors = check_versioning(RUN_DIR)
     errors.extend(version_errors)
     print()
     
