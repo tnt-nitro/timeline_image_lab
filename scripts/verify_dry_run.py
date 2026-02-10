@@ -8,9 +8,13 @@ import sys
 from pathlib import Path
 import re
 
+# Pfade relativ zum Skript-Verzeichnis
+ROOT = Path(__file__).resolve().parent.parent
+SCHEMAS = ROOT / "schemas"
+
 def check_artifacts(run_id):
     """Prüft, ob alle erwarteten Artefakte vorhanden sind"""
-    run_dir = Path(f"runs/{run_id}")
+    run_dir = ROOT / "runs" / run_id
     errors = []
     warnings = []
     
@@ -84,7 +88,7 @@ def check_no_sensitive_data(file_path):
 
 def check_relative_paths(run_id):
     """Prüft, ob alle Pfade in merged.json relativ sind"""
-    merged_path = Path(f"runs/{run_id}/merged/merged_v001.json")
+    merged_path = ROOT / "runs" / run_id / "merged" / "merged_v001.json"
     if not merged_path.exists():
         return True, None  # Optional
     
@@ -108,7 +112,7 @@ def check_relative_paths(run_id):
 
 def check_versioning(run_id):
     """Prüft Versionierung (monoton steigend)"""
-    run_dir = Path(f"runs/{run_id}")
+    run_dir = ROOT / "runs" / run_id
     errors = []
     
     # Prüfe Annotation-Versionen
@@ -145,7 +149,7 @@ def main():
         sys.exit(1)
     
     run_id = sys.argv[1]
-    run_dir = Path(f"runs/{run_id}")
+    run_dir = ROOT / "runs" / run_id
     
     if not run_dir.exists():
         print(f"❌ Run-Verzeichnis nicht gefunden: {run_dir}")
@@ -166,7 +170,7 @@ def main():
     print("2. Prüfe JSON-Schemas...")
     metadata_path = run_dir / "metadata/metadata.user.json"
     if metadata_path.exists():
-        valid, msg = check_json_schema(metadata_path, Path("schemas/metadata.user.schema.json"))
+        valid, msg = check_json_schema(metadata_path, SCHEMAS / "metadata.user.schema.json")
         if valid:
             print(f"  ✅ metadata.user.json valide")
         else:
@@ -175,7 +179,7 @@ def main():
     
     feedback_path = run_dir / "annotations/feedback_v001.json"
     if feedback_path.exists():
-        valid, msg = check_json_schema(feedback_path, Path("schemas/feedback.schema.json"))
+        valid, msg = check_json_schema(feedback_path, SCHEMAS / "feedback.schema.json")
         if valid:
             print(f"  ✅ feedback_v001.json valide")
         else:
