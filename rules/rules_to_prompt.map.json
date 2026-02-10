@@ -1,0 +1,10 @@
+{
+  "R12": {
+    "section": "headlights",
+    "text": "Inactive headlight positions must use flat, opaque blind plates with zero height; visible screw heads; never transparent or volumetric."
+  },
+  "R13": {
+    "section": "front",
+    "text": "Tow hooks are physical parts rendered in red inside the cooling inlet; never as flat graphics or holes."
+  }
+}

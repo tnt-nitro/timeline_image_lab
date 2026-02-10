@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Timeline Image Lab – Review Dashboard (Offline)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Timeline Image Lab – Review</h1>
+      <p class="hint">Lokal, offline, keine Telemetrie. JSON wird nur aus dem lokalen Dateisystem gelesen.</p>
+    </div>
+    <div class="run-info">
+      <label>
+        Merged JSON Pfad:
+        <input id="mergedPath" type="text" value="../examples/merged.example.json" />
+      </label>
+      <button id="loadBtn">Laden</button>
+      <div class="meta">
+        <span>Run-ID: <strong id="runId">–</strong></span>
+        <span>Version: <strong id="version">–</strong></span>
+        <span>Summary: <strong id="summary">–</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="compare">
+      <h2>Render Vergleich</h2>
+      <div class="compare-grid">
+        <div>
+          <h3>Vorher</h3>
+          <img id="renderPrev" alt="Render vorher" />
+        </div>
+        <div class="after-wrapper">
+          <h3>Nachher</h3>
+          <div class="after-stack">
+            <img id="renderNext" alt="Render nachher" />
+            <img id="annotationOverlay" alt="Annotation Overlay" class="overlay hidden" />
+          </div>
+          <label class="overlay-toggle">
+            <input type="checkbox" id="toggleOverlay" />
+            Annotation-Overlay einblenden
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="details">
+      <div class="feedback-panel">
+        <h2>Feedback-Items</h2>
+        <div id="feedbackList" class="feedback-list"></div>
+      </div>
+
+      <div class="prompt-panel">
+        <h2>Prompt</h2>
+        <div class="prompt-block">
+          <h3>Base Prompt</h3>
+          <pre id="promptBase"></pre>
+        </div>
+        <div class="prompt-block">
+          <h3>Patch</h3>
+          <pre id="promptPatch"></pre>
+        </div>
+        <div class="prompt-block">
+          <h3>Final Prompt</h3>
+          <pre id="promptFinal"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

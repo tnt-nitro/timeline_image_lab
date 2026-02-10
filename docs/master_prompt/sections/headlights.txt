@@ -1,0 +1,6 @@
+Headlights:
+- Layout: {headlights.layout}
+- Blind plates flush: {headlights.blind_plate_is_flush}
+- Positions are defined explicitly per layout.
+- Active headlights have visible volume and transparent lenses.
+{RULES}

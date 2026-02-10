@@ -1,0 +1,30 @@
+{
+  "image_id": "example_ref01",
+  "class": "Group C",
+  "car": {
+    "team": "Example Team",
+    "model": "Example Model",
+    "number": "00",
+    "is_scale_model": false
+  },
+  "scene": "presentation",
+  "view": "3_4_front_left",
+  "front": {
+    "tow_hooks": "both",
+    "splitter": "long",
+    "cooling_inlet": "large",
+    "center_keel": true,
+    "inlet_braces": "both"
+  },
+  "headlights": {
+    "layout": ["active", "blind_plate", "blind_plate", "active"],
+    "blind_plate_is_flush": true
+  },
+  "windshield_banner": {
+    "background": "red",
+    "text_color": "black"
+  },
+  "notes": ["PLACEHOLDER – no real data"]
+}
+
+

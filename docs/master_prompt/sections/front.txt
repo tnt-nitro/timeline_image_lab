@@ -1,0 +1,7 @@
+Front module:
+- Splitter: {front.splitter}
+- Cooling inlet: {front.cooling_inlet}
+- Center keel: {front.center_keel}
+- Inlet braces: {front.inlet_braces}
+- Tow hooks: {front.tow_hooks}
+{RULES}

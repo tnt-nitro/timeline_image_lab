@@ -1,0 +1,20 @@
+{
+  "run_id": "example_ref01",
+  "render_id": "render_001",
+  "version": 2,
+  "items": [
+    {
+      "annotation_id": "a1f2c3d4",
+      "annotation_ref": {
+        "tool": "pen",
+        "color": "red",
+        "bbox": [120, 340, 220, 410]
+      },
+      "area": "front/headlights/inner_left",
+      "type": "depth",
+      "severity": "critical",
+      "note": "Blind plate must be flush, no volume",
+      "expected": "0 mm height, flat plate with visible screws"
+    }
+  ]
+}

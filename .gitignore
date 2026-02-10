@@ -1,0 +1,15 @@
+# PRIVATE DATA – NEVER COMMIT
+runs/
+private/
+local_data/
+*.env
+*.local.json
+*.private.json
+
+# OS / Editor / Misc
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+

@@ -1,0 +1,17 @@
+Create a technical, realistic illustration of a {class} race car.
+
+Vehicle:
+- Team: {car.team}
+- Model: {car.model}
+- Start number: {car.number}
+- Scale model: {car.is_scale_model}
+
+Scene and view:
+- Scene: {scene}
+- View: {view}
+
+Rendering rules:
+- Technical illustration, vector-like
+- Colors are data, not decoration
+- Logos must be readable and position-correct
+- Focus on vehicle; other persons neutral

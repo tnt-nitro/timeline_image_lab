@@ -1,0 +1,21 @@
+{
+  "scoring": {
+    "critical": 5,
+    "major": 3,
+    "minor": 1
+  },
+  "priorities": [
+    {
+      "rule_id": "R12",
+      "score": 15,
+      "occurrences": 3,
+      "priority": "high"
+    },
+    {
+      "rule_id": "R13",
+      "score": 6,
+      "occurrences": 2,
+      "priority": "medium"
+    }
+  ]
+}

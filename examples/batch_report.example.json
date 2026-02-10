@@ -1,0 +1,48 @@
+{
+  "runs": [
+    {
+      "run_id": "2026-02-10_ref01",
+      "version": 2,
+      "issues_total": 3,
+      "critical": 1,
+      "major": 1,
+      "minor": 1,
+      "by_type": {
+        "depth": 1,
+        "geometry": 1,
+        "color": 1
+      },
+      "by_area": {
+        "front/headlights/inner_left": 1,
+        "front/inlet": 1,
+        "roof": 1
+      },
+      "by_color_meaning": {
+        "error": 2,
+        "uncertain": 1
+      }
+    }
+  ],
+  "summary": {
+    "total_runs": 1,
+    "total_iterations": 1,
+    "total_issues": 3,
+    "critical_total": 1,
+    "major_total": 1,
+    "minor_total": 1,
+    "by_type": {
+      "depth": 1,
+      "geometry": 1,
+      "color": 1
+    },
+    "by_area": {
+      "front/headlights/inner_left": 1,
+      "front/inlet": 1,
+      "roof": 1
+    },
+    "by_color_meaning": {
+      "error": 2,
+      "uncertain": 1
+    }
+  }
+}

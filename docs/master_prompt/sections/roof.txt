@@ -1,0 +1,3 @@
+Roof and upper body:
+- Follow metadata specifications.
+{RULES}

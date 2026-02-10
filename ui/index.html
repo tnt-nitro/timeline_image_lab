@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Timeline Image Lab – Annotation (Offline)</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; display: grid; grid-template-columns: 1fr 2fr 1fr; height: 100vh; }
+    aside, main { padding: 10px; box-sizing: border-box; overflow-y: auto; }
+    aside { border-right: 1px solid #ccc; }
+    main { border-right: 1px solid #ccc; }
+    canvas { border: 1px solid #999; width: 100%; height: auto; cursor: crosshair; }
+    label { display:block; margin-top:8px; }
+    button { margin-top:10px; padding: 6px 12px; }
+    .tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .tools button { margin: 0; }
+    .tools button.active { background: #4CAF50; color: white; font-weight: bold; }
+    .color-palette { display: flex; gap: 6px; margin: 10px 0; }
+    .color-btn { width: 40px; height: 40px; border: 2px solid #333; cursor: pointer; }
+    .color-btn.active { border: 3px solid #000; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+    .color-red { background: #f44336; }
+    .color-green { background: #4CAF50; }
+    .color-yellow { background: #FFEB3B; }
+    .color-blue { background: #2196F3; }
+    .status { margin: 10px 0; padding: 8px; background: #f0f0f0; border-radius: 4px; }
+    .item-list { margin-top: 10px; border-top: 1px solid #ccc; padding-top: 10px; }
+    .item { border: 1px solid #ddd; padding: 8px; margin: 5px 0; background: #f9f9f9; cursor: pointer; }
+    .item:hover { background: #e0e0e0; }
+    .item.highlighted { border: 2px solid #2196F3; background: #E3F2FD; }
+    .item-id { font-size: 0.85em; color: #666; }
+    input[readonly] { background: #eee; }
+  </style>
+</head>
+<body>
+
+<aside>
+  <h3>Bilder</h3>
+  <input type="file" id="imageLoader" accept="image/*" />
+  <p>Hinweis: rein lokal, nichts wird hochgeladen.</p>
+</aside>
+
+<main>
+  <h3>Annotation</h3>
+  <div class="tools">
+    <button id="toolPen" onclick="setTool('pen')">Stift</button>
+    <button id="toolLasso" onclick="setTool('lasso')">Lasso</button>
+    <button onclick="undoAction()">Undo (Ctrl+Z)</button>
+    <button onclick="redoAction()">Redo (Ctrl+Shift+Z)</button>
+    <button onclick="clearCanvas()">Reset</button>
+  </div>
+  <div class="color-palette">
+    <div class="color-btn color-red active" id="colorRed" onclick="setColor('red')" title="Fehler"></div>
+    <div class="color-btn color-green" id="colorGreen" onclick="setColor('green')" title="Korrekt"></div>
+    <div class="color-btn color-yellow" id="colorYellow" onclick="setColor('yellow')" title="Unklar / Prüfen"></div>
+    <div class="color-btn color-blue" id="colorBlue" onclick="setColor('blue')" title="Referenz / Hinweis"></div>
+  </div>
+  <div class="status">
+    Tool: <span id="currentTool">Stift</span> | 
+    Farbe: <span id="currentColor">Rot (Fehler)</span>
+  </div>
+  <canvas id="canvas" width="1200" height="800"></canvas>
+  <div>
+    <span>Version: <span id="annotateVersion">1</span></span>
+    <button onclick="downloadPNG()">annotate_v<span id="annotateVersionBtn">001</span>.png speichern</button>
+  </div>
+</main>
+
+<aside>
+  <h3>Feedback</h3>
+  <label>Annotation-ID <input id="annotationId" readonly></label>
+  <label>Area <input id="area"></label>
+  <label>Type
+    <select id="type">
+      <option>geometry</option>
+      <option>color</option>
+      <option>label</option>
+      <option>presence</option>
+      <option>depth</option>
+    </select>
+  </label>
+  <label>Severity
+    <select id="severity">
+      <option>minor</option>
+      <option>major</option>
+      <option>critical</option>
+    </select>
+  </label>
+  <label>Note <input id="note"></label>
+  <label>Expected <input id="expected"></label>
+  <button onclick="addFeedbackItem()">Neues Item hinzufügen</button>
+  <div class="item-list">
+    <h4>Items (<span id="itemCount">0</span>)</h4>
+    <div id="itemsList"></div>
+  </div>
+  <div>
+    <span>Version: <span id="feedbackVersion">1</span></span>
+    <button onclick="downloadFeedback()">feedback_v<span id="feedbackVersionBtn">001</span>.json speichern</button>
+  </div>
+</aside>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let tool = 'pen';
+let currentColor = 'red';
+let annotateVersion = 1;
+let feedbackVersion = 1;
+let feedbackItems = [];
+let currentAnnotationId = null;
+let currentAnnotationRef = null;
+
+// Undo/Redo Stack
+const actions = [];
+let redoStack = [];
+let baseImage = null;
+
+// Lasso State
+let lassoPoints = [];
+let lassoActive = false;
+
+// Color Mapping
+const colorMap = {
+  'red': { meaning: 'error', name: 'Fehler' },
+  'green': { meaning: 'correct', name: 'Korrekt' },
+  'yellow': { meaning: 'uncertain', name: 'Unklar / Prüfen' },
+  'blue': { meaning: 'reference', name: 'Referenz / Hinweis' }
+};
+
+// Color Values
+const colorValues = {
+  'red': '#f44336',
+  'green': '#4CAF50',
+  'yellow': '#FFEB3B',
+  'blue': '#2196F3'
+};
+
+function generateUUID() {
+  return 'a' + Math.random().toString(36).substr(2, 9);
+}
+
+function setTool(t) {
+  tool = t;
+  document.getElementById('toolPen').classList.toggle('active', t === 'pen');
+  document.getElementById('toolLasso').classList.toggle('active', t === 'lasso');
+  document.getElementById('currentTool').textContent = t === 'lasso' ? 'Lasso' : 'Stift';
+  if (t === 'lasso') {
+    lassoPoints = [];
+    lassoActive = true;
+  } else {
+    lassoActive = false;
+  }
+}
+
+function setColor(c) {
+  currentColor = c;
+  document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('color' + c.charAt(0).toUpperCase() + c.slice(1)).classList.add('active');
+  document.getElementById('currentColor').textContent = colorMap[c].name;
+}
+
+function updateVersionDisplay() {
+  document.getElementById('annotateVersion').textContent = annotateVersion;
+  document.getElementById('annotateVersionBtn').textContent = String(annotateVersion).padStart(3, '0');
+  document.getElementById('feedbackVersion').textContent = feedbackVersion;
+  document.getElementById('feedbackVersionBtn').textContent = String(feedbackVersion).padStart(3, '0');
+}
+
+function saveState() {
+  actions.push(canvas.toDataURL());
+  redoStack = [];
+  if (actions.length > 50) actions.shift(); // Limit stack size
+}
+
+function restoreState(dataUrl) {
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (baseImage) ctx.drawImage(baseImage, 0, 0);
+    ctx.drawImage(img, 0, 0);
+  };
+  img.src = dataUrl;
+}
+
+function undoAction() {
+  if (actions.length > 0) {
+    redoStack.push(canvas.toDataURL());
+    actions.pop();
+    if (actions.length > 0) {
+      restoreState(actions[actions.length - 1]);
+    } else if (baseImage) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(baseImage, 0, 0);
+    }
+  }
+}
+
+function redoAction() {
+  if (redoStack.length > 0) {
+    const state = redoStack.pop();
+    actions.push(canvas.toDataURL());
+    restoreState(state);
+  }
+}
+
+// Pen drawing
+let drawing = false;
+let pathPoints = [];
+
+canvas.addEventListener('mousedown', e => {
+  if (tool === 'pen') {
+    drawing = true;
+    currentAnnotationId = generateUUID();
+    document.getElementById('annotationId').value = currentAnnotationId;
+    pathPoints = [[e.offsetX, e.offsetY]];
+    saveState();
+    ctx.beginPath();
+    ctx.moveTo(e.offsetX, e.offsetY);
+    ctx.strokeStyle = colorValues[currentColor];
+    ctx.lineWidth = 3;
+  } else if (tool === 'lasso') {
+    lassoPoints.push([e.offsetX, e.offsetY]);
+    redraw();
+  }
+});
+
+canvas.addEventListener('dblclick', e => {
+  if (tool === 'lasso' && lassoPoints.length >= 3) {
+    // Close polygon
+    saveState();
+    ctx.beginPath();
+    ctx.moveTo(lassoPoints[0][0], lassoPoints[0][1]);
+    for (let i = 1; i < lassoPoints.length; i++) {
+      ctx.lineTo(lassoPoints[i][0], lassoPoints[i][1]);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = colorValues[currentColor];
+    ctx.fillStyle = colorValues[currentColor] + '80'; // 50% opacity
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+    
+    // Calculate bbox
+    const xs = lassoPoints.map(p => p[0]);
+    const ys = lassoPoints.map(p => p[1]);
+    const bbox = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+    
+    currentAnnotationId = generateUUID();
+    document.getElementById('annotationId').value = currentAnnotationId;
+    currentAnnotationRef = {
+      tool: 'lasso',
+      color: currentColor,
+      polygon: lassoPoints,
+      bbox: bbox
+    };
+    
+    lassoPoints = [];
+    lassoActive = false;
+  }
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (tool === 'pen' && drawing) {
+    drawing = false;
+    if (pathPoints.length > 0) {
+      const xs = pathPoints.map(p => p[0]);
+      const ys = pathPoints.map(p => p[1]);
+      currentAnnotationRef = {
+        tool: 'pen',
+        color: currentColor,
+        bbox: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]
+      };
+    }
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (tool === 'pen' && drawing) {
+    pathPoints.push([e.offsetX, e.offsetY]);
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+  } else if (tool === 'lasso' && lassoActive) {
+    redraw();
+    // Preview line to current mouse
+    if (lassoPoints.length > 0) {
+      ctx.beginPath();
+      ctx.moveTo(lassoPoints[lassoPoints.length - 1][0], lassoPoints[lassoPoints.length - 1][1]);
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.strokeStyle = colorValues[currentColor] + '60';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+});
+
+function redraw() {
+  if (baseImage) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(baseImage, 0, 0);
+  }
+  // Redraw all actions
+  if (actions.length > 0) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.src = actions[actions.length - 1];
+  }
+  // Draw current lasso preview
+  if (lassoPoints.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(lassoPoints[0][0], lassoPoints[0][1]);
+    for (let i = 1; i < lassoPoints.length; i++) {
+      ctx.lineTo(lassoPoints[i][0], lassoPoints[i][1]);
+    }
+    ctx.strokeStyle = colorValues[currentColor] + '80';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+document.getElementById('imageLoader').addEventListener('change', e => {
+  const img = new Image();
+  img.onload = () => {
+    baseImage = img;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    actions.length = 0;
+    redoStack.length = 0;
+  };
+  img.src = URL.createObjectURL(e.target.files[0]);
+});
+
+function clearCanvas() {
+  saveState();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (baseImage) ctx.drawImage(baseImage, 0, 0);
+  annotateVersion++;
+  updateVersionDisplay();
+}
+
+function downloadPNG() {
+  const a = document.createElement('a');
+  const versionStr = String(annotateVersion).padStart(3, '0');
+  a.download = `annotate_v${versionStr}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+  annotateVersion++;
+  updateVersionDisplay();
+}
+
+function addFeedbackItem() {
+  const item = {
+    annotation_id: document.getElementById('annotationId').value || generateUUID(),
+    annotation_ref: currentAnnotationRef || {
+      tool: tool,
+      color: currentColor,
+      bbox: [0, 0, 0, 0]
+    },
+    area: document.getElementById('area').value,
+    type: document.getElementById('type').value,
+    severity: document.getElementById('severity').value,
+    note: document.getElementById('note').value,
+    expected: document.getElementById('expected').value
+  };
+  feedbackItems.push(item);
+  updateItemsList();
+  document.getElementById('area').value = '';
+  document.getElementById('note').value = '';
+  document.getElementById('expected').value = '';
+  document.getElementById('annotationId').value = '';
+  currentAnnotationId = null;
+  currentAnnotationRef = null;
+}
+
+function highlightAnnotation(item) {
+  // Remove previous highlights
+  document.querySelectorAll('.item').forEach(el => el.classList.remove('highlighted'));
+  // Highlight clicked item
+  event.currentTarget.classList.add('highlighted');
+  // Draw highlight on canvas (optional visual feedback)
+  if (item.annotation_ref && item.annotation_ref.bbox) {
+    const [x1, y1, x2, y2] = item.annotation_ref.bbox;
+    ctx.strokeStyle = '#FF9800';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    setTimeout(() => {
+      redraw();
+    }, 1000);
+  }
+}
+
+function updateItemsList() {
+  const list = document.getElementById('itemsList');
+  list.innerHTML = '';
+  feedbackItems.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.onclick = () => highlightAnnotation(item);
+    div.innerHTML = `
+      <div class="item-id">ID: ${item.annotation_id}</div>
+      <div><strong>${item.area}</strong> - ${item.type} (${item.severity})</div>
+      <div style="color: ${colorValues[item.annotation_ref?.color || 'red']}">● ${colorMap[item.annotation_ref?.color || 'red'].name}</div>
+      <div>${item.note}</div>
+      <button onclick="event.stopPropagation(); removeItem(${idx})">Entfernen</button>
+    `;
+    list.appendChild(div);
+  });
+  document.getElementById('itemCount').textContent = feedbackItems.length;
+}
+
+function removeItem(idx) {
+  feedbackItems.splice(idx, 1);
+  updateItemsList();
+}
+
+function downloadFeedback() {
+  const data = {
+    run_id: "LOCAL_RUN",
+    render_id: "render_001",
+    version: feedbackVersion,
+    items: feedbackItems.map(item => ({
+      ...item,
+      annotation_ref: {
+        ...item.annotation_ref,
+        meaning: colorMap[item.annotation_ref.color]?.meaning
+      }
+    }))
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  const versionStr = String(feedbackVersion).padStart(3, '0');
+  a.download = `feedback_v${versionStr}.json`;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  feedbackVersion++;
+  updateVersionDisplay();
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+    e.preventDefault();
+    undoAction();
+  } else if (e.ctrlKey && e.key === 'z' && e.shiftKey) {
+    e.preventDefault();
+    redoAction();
+  }
+});
+
+updateVersionDisplay();
+setTool('pen');
+setColor('red');
+</script>
+</body>
+</html>

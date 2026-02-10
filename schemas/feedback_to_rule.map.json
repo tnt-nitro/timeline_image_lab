@@ -1,0 +1,12 @@
+{
+  "depth:critical": [
+    "Enforce zero-height for blind plates; flat, opaque, visible screws"
+  ],
+  "geometry:major": [
+    "Verify component placement against module definitions"
+  ],
+  "color:major": [
+    "Treat colors as data; do not substitute or infer"
+  ]
+}
+

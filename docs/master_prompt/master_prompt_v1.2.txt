@@ -1,0 +1,36 @@
+Create a technical, realistic illustration of a {class} race car.
+
+Vehicle:
+- Team: {car.team}
+- Model: {car.model}
+- Start number: {car.number}
+- Scale model: {car.is_scale_model}
+
+Scene and view:
+- Scene: {scene}
+- View: {view}
+
+Front module:
+- Splitter: {front.splitter}
+- Cooling inlet: {front.cooling_inlet}
+- Center keel: {front.center_keel}
+- Inlet braces: {front.inlet_braces}
+- Tow hooks: {front.tow_hooks}
+
+Headlights:
+- Layout: {headlights.layout}
+- Blind plates flush: {headlights.blind_plate_is_flush}
+
+Windshield banner:
+- Background color: {windshield_banner.background}
+- Text color: {windshield_banner.text_color}
+
+Rendering rules:
+- Technical illustration, vector-like
+- Colors are data, not decoration
+- Logos must be readable and position-correct
+- Active headlights have volume
+- Blind plates are flat, opaque, flush with body
+- Tow hooks are physical parts, red, inside cooling inlet
+- Focus on vehicle; other persons neutral
+

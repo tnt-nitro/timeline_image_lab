@@ -1,0 +1,8 @@
+MASTER_PROMPT_EXAMPLE
+
+# Hinweis
+# Diese Datei ist ein BEISPIEL.
+# Keine echten Personen, Systeme, IPs, Hostnamen oder private Inhalte.
+
+Beschreibe das Bild sachlich, anonymisiert und ohne Rückschlüsse auf reale Personen oder Orte.
+

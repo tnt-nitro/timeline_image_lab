@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "rule_id": "R12",
+      "title": "Blind plates must be flush",
+      "area": "front/headlights",
+      "derived_from": ["depth:critical"],
+      "description": "Inactive headlight positions use flat, opaque blind plates with visible screws and zero height.",
+      "status": "active",
+      "introduced_in": "v1.2"
+    },
+    {
+      "rule_id": "R13",
+      "title": "Tow hooks are physical parts",
+      "area": "front/inlet",
+      "derived_from": ["presence:major"],
+      "description": "Tow hooks must be rendered as red physical parts inside the cooling inlet.",
+      "status": "active",
+      "introduced_in": "v1.1"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "metadata.user",
+  "type": "object",
+  "required": ["image_id", "class", "car", "scene", "view"],
+  "properties": {
+    "image_id": { "type": "string" },
+
+    "class": {
+      "type": "string",
+      "enum": ["Group C"]
+    },
+
+    "car": {
+      "type": "object",
+      "required": ["team", "model", "number", "is_scale_model"],
+      "properties": {
+        "team": { "type": "string" },
+        "model": { "type": "string" },
+        "number": { "type": "string" },
+        "is_scale_model": { "type": "boolean" }
+      }
+    },
+
+    "scene": {
+      "type": "string",
+      "enum": ["race", "pit", "presentation", "parc_ferme", "museum"]
+    },
+
+    "view": {
+      "type": "string",
+      "enum": [
+        "front",
+        "rear",
+        "left",
+        "right",
+        "top",
+        "3_4_front_left",
+        "3_4_front_right",
+        "scene"
+      ]
+    },
+
+    "front": {
+      "type": "object",
+      "properties": {
+        "tow_hooks": { "enum": ["none", "left", "right", "both"] },
+        "splitter": { "enum": ["short", "long"] },
+        "cooling_inlet": { "enum": ["small", "large"] },
+        "center_keel": { "type": "boolean" },
+        "inlet_braces": { "enum": ["none", "left", "right", "both"] }
+      }
+    },
+
+    "headlights": {
+      "type": "object",
+      "properties": {
+        "layout": {
+          "type": "array",
+          "items": {
+            "enum": ["active", "blind_plate", "covered", "absent"]
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "blind_plate_is_flush": { "type": "boolean" }
+      }
+    },
+
+    "windshield_banner": {
+      "type": "object",
+      "properties": {
+        "background": { "enum": ["red", "black", "yellow", "white"] },
+        "text_color": { "enum": ["black", "white"] }
+      }
+    },
+
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
+
+

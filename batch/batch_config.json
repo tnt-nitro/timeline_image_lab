@@ -1,0 +1,5 @@
+{
+  "runs_path": "runs",
+  "include_runs": ["2026-02-10_ref01", "2026-02-11_ref02"],
+  "metrics": ["issues_total", "critical", "major", "minor", "by_type", "by_area"]
+}

@@ -1,0 +1,24 @@
+{
+  "run_id": "2026-02-10_ref01",
+  "version": 2,
+  "inputs": {
+    "metadata_user": "metadata/metadata.user.json",
+    "feedback": "annotations/feedback_v002.json",
+    "prompt_base": "docs/master_prompt/master_prompt_v1.2.txt"
+  },
+  "derived": {
+    "prompt_patch": "docs/master_prompt/master_prompt_v1.3.patch.txt",
+    "prompt_final": "docs/master_prompt/master_prompt_v1.3.txt"
+  },
+  "trace": {
+    "annotation_png": "annotations/annotate_v002.png",
+    "render_prev": "renders/render_002.png",
+    "render_next": "renders/render_003.png"
+  },
+  "summary": {
+    "issues_total": 3,
+    "critical": 1,
+    "major": 1,
+    "minor": 1
+  }
+}
